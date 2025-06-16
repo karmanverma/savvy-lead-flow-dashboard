@@ -94,9 +94,13 @@ const Auth = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Building className="h-8 w-8 text-blue-600 mr-2" />
-            <span className="text-2xl font-bold text-gray-900">Royal Canadian Realty</span>
+          <div className="flex flex-col items-center justify-center mb-4">
+            <img 
+              src="https://torontodigital.ca/wp-content/uploads/2025/05/todigi-icon-w-border@500x.webp" 
+              alt="Toronto Digital" 
+              className="h-16 w-auto mb-2"
+            />
+            <span className="text-2xl font-bold text-gray-900">Toronto Digital</span>
           </div>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>Sign in to your account or create a new one</CardDescription>

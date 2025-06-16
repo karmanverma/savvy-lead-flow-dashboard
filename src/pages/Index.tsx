@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Analytics } from "@/components/Analytics";
 import { AIAgentsManagement } from "@/components/AIAgentsManagement";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User } from "lucide-react";
+import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User, ChevronDown } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("pipeline");
@@ -66,25 +66,26 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span>Welcome, {user?.user_metadata?.full_name || user?.email}</span>
+              <div className="relative group">
+                <button 
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 focus:outline-none"
+                >
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+                    <User className="w-4 h-4" />
+                    <span>Welcome, {user?.user_metadata?.full_name || user?.email}</span>
+                    <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                  </div>
+                </button>
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <button
+                    onClick={signOut}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </button>
+                </div>
               </div>
-              <Button 
-                onClick={() => setShowAddLead(true)}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Lead
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={signOut}
-                className="border-red-200 text-red-600 hover:bg-red-50"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
             </div>
           </div>
         </div>
@@ -124,7 +125,16 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pipeline">
+          <TabsContent value="pipeline" className="space-y-4">
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setShowAddLead(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Lead
+              </Button>
+            </div>
             <LeadPipeline />
           </TabsContent>
 

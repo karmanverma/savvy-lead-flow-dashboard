@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { LeadPipeline } from "@/components/LeadPipeline";
 import { CallHistory } from "@/components/CallHistory";
 import { Analytics } from "@/components/Analytics";
+import { AIAgentsManagement } from "@/components/AIAgentsManagement";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
-import { Users, Phone, TrendingUp, Plus } from "lucide-react";
+import { Users, Phone, TrendingUp, Plus, Bot } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("pipeline");
@@ -52,7 +53,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">RE Agents CRM</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Royal Canadian Realty CRM</h1>
               <p className="text-gray-600 mt-1">AI-Powered Real Estate Lead Management</p>
             </div>
             <Button 
@@ -93,6 +94,11 @@ const Index = () => {
             <TabsTrigger value="pipeline" className="px-6 py-3">Lead Pipeline</TabsTrigger>
             <TabsTrigger value="calls" className="px-6 py-3">Call History</TabsTrigger>
             <TabsTrigger value="analytics" className="px-6 py-3">Analytics</TabsTrigger>
+            <TabsTrigger value="agents" className="px-6 py-3 flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              AI Agents
+              <Badge variant="secondary" className="ml-1">3</Badge>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pipeline">
@@ -105,6 +111,10 @@ const Index = () => {
 
           <TabsContent value="analytics">
             <Analytics />
+          </TabsContent>
+
+          <TabsContent value="agents">
+            <AIAgentsManagement />
           </TabsContent>
         </Tabs>
       </div>

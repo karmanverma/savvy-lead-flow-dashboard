@@ -1,9 +1,10 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Phone, Calendar } from "lucide-react";
+import { LeadProfile } from "./LeadProfile";
 
 const mockLeads = [
   {
@@ -49,6 +50,14 @@ const stages = [
 ];
 
 export const LeadPipeline = () => {
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [showLeadProfile, setShowLeadProfile] = useState(false);
+
+  const handleLeadClick = (leadId: number) => {
+    setSelectedLeadId(leadId);
+    setShowLeadProfile(true);
+  };
+
   const getLeadsByStatus = (status: string) => 
     mockLeads.filter(lead => lead.status === status);
 
@@ -92,7 +101,11 @@ export const LeadPipeline = () => {
 
             <div className="space-y-3">
               {getLeadsByStatus(stage.status).map((lead) => (
-                <Card key={lead.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card 
+                  key={lead.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleLeadClick(lead.id)}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -139,6 +152,15 @@ export const LeadPipeline = () => {
           </div>
         ))}
       </div>
+
+      {/* Lead Profile Overlay */}
+      {selectedLeadId && (
+        <LeadProfile
+          leadId={selectedLeadId}
+          open={showLeadProfile}
+          onOpenChange={setShowLeadProfile}
+        />
+      )}
     </div>
   );
 };

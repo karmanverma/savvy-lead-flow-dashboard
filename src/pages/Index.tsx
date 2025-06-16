@@ -9,11 +9,13 @@ import { CallHistory } from "@/components/CallHistory";
 import { Analytics } from "@/components/Analytics";
 import { AIAgentsManagement } from "@/components/AIAgentsManagement";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
-import { Users, Phone, TrendingUp, Plus, Bot } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("pipeline");
   const [showAddLead, setShowAddLead] = useState(false);
+  const { user, signOut } = useAuth();
 
   const stats = [
     {
@@ -56,13 +58,27 @@ const Index = () => {
               <h1 className="text-3xl font-bold text-gray-900">Royal Canadian Realty CRM</h1>
               <p className="text-gray-600 mt-1">AI-Powered Real Estate Lead Management</p>
             </div>
-            <Button 
-              onClick={() => setShowAddLead(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Lead
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Welcome, {user?.user_metadata?.full_name || user?.email}</span>
+              </div>
+              <Button 
+                onClick={() => setShowAddLead(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Lead
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={signOut}
+                className="border-red-200 text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>

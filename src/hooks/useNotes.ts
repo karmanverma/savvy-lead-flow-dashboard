@@ -37,13 +37,15 @@ export const useCreateNote = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (noteData: { lead_id: string; content: string; note_type?: string }) => {
+    mutationFn: async (noteData: { lead_id: string; content: string; note_type?: 'general' | 'call_summary' | 'follow_up' | 'qualification' }) => {
       const { data, error } = await supabase
         .from('notes')
         .insert({
-          ...noteData,
+          lead_id: noteData.lead_id,
+          content: noteData.content,
           author_type: 'agent',
           note_type: noteData.note_type || 'general',
+          is_private: false,
         })
         .select()
         .single();

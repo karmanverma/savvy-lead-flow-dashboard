@@ -157,6 +157,145 @@ export type Database = {
           },
         ]
       }
+      call_queue: {
+        Row: {
+          ai_agent_id: string
+          call_objective: string
+          created_at: string
+          created_by: string | null
+          custom_context: Json | null
+          executed_at: string | null
+          id: string
+          lead_id: string
+          max_retries: number | null
+          priority: number | null
+          retry_count: number | null
+          scheduled_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_agent_id: string
+          call_objective: string
+          created_at?: string
+          created_by?: string | null
+          custom_context?: Json | null
+          executed_at?: string | null
+          id?: string
+          lead_id: string
+          max_retries?: number | null
+          priority?: number | null
+          retry_count?: number | null
+          scheduled_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_agent_id?: string
+          call_objective?: string
+          created_at?: string
+          created_by?: string | null
+          custom_context?: Json | null
+          executed_at?: string | null
+          id?: string
+          lead_id?: string
+          max_retries?: number | null
+          priority?: number | null
+          retry_count?: number | null
+          scheduled_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_queue_ai_agent_id_fkey"
+            columns: ["ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_queue_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_recordings: {
+        Row: {
+          ai_agent_id: string | null
+          call_id: string | null
+          call_outcome: string | null
+          call_status: string
+          conversation_data: Json | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          lead_id: string
+          lead_score_change: number | null
+          next_action: string | null
+          recording_url: string | null
+          sentiment_score: number | null
+          transcription: string | null
+        }
+        Insert: {
+          ai_agent_id?: string | null
+          call_id?: string | null
+          call_outcome?: string | null
+          call_status: string
+          conversation_data?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          lead_id: string
+          lead_score_change?: number | null
+          next_action?: string | null
+          recording_url?: string | null
+          sentiment_score?: number | null
+          transcription?: string | null
+        }
+        Update: {
+          ai_agent_id?: string | null
+          call_id?: string | null
+          call_outcome?: string | null
+          call_status?: string
+          conversation_data?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          lead_id?: string
+          lead_score_change?: number | null
+          next_action?: string | null
+          recording_url?: string | null
+          sentiment_score?: number | null
+          transcription?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_recordings_ai_agent_id_fkey"
+            columns: ["ai_agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_recordings_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_recordings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calls: {
         Row: {
           agent_id: string | null
@@ -559,6 +698,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduling_rules: {
+        Row: {
+          blackout_dates: string[] | null
+          business_hours: Json
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          blackout_dates?: string[] | null
+          business_hours?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          blackout_dates?: string[] | null
+          business_hours?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

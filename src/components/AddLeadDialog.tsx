@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useCreateLead } from "@/hooks/useLeads";
 
 interface AddLeadDialogProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface AddLeadDialogProps {
 }
 
 export const AddLeadDialog = ({ open, onOpenChange }: AddLeadDialogProps) => {
-  const { toast } = useToast();
+  const createLead = useCreateLead();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -27,40 +28,34 @@ export const AddLeadDialog = ({ open, onOpenChange }: AddLeadDialogProps) => {
     notes: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
       return;
     }
 
-    console.log("New lead data:", formData);
-    
-    toast({
-      title: "Lead Added Successfully",
-      description: `${formData.firstName} ${formData.lastName} has been added to your pipeline.`
-    });
+    try {
+      await createLead.mutateAsync(formData);
+      
+      // Reset form
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        source: "",
+        priority: "",
+        budget: "",
+        propertyType: "",
+        notes: ""
+      });
 
-    // Reset form
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      source: "",
-      priority: "",
-      budget: "",
-      propertyType: "",
-      notes: ""
-    });
-
-    onOpenChange(false);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating lead:', error);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -141,8 +136,7 @@ export const AddLeadDialog = ({ open, onOpenChange }: AddLeadDialogProps) => {
                   <SelectItem value="facebook">Facebook</SelectItem>
                   <SelectItem value="google">Google Ads</SelectItem>
                   <SelectItem value="referral">Referral</SelectItem>
-                  <SelectItem value="walk-in">Walk-in</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="walk_in">Walk-in</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -179,10 +173,10 @@ export const AddLeadDialog = ({ open, onOpenChange }: AddLeadDialogProps) => {
                   <SelectValue placeholder="Select property type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="single-family">Single Family</SelectItem>
+                  <SelectItem value="house">Single Family</SelectItem>
                   <SelectItem value="condo">Condo</SelectItem>
-                  <SelectItem value="townhouse">Townhouse</SelectItem>
-                  <SelectItem value="multi-family">Multi-Family</SelectItem>
+                  <SelectItem value="townhome">Townhouse</SelectItem>
+                  <SelectItem value="multi_family">Multi-Family</SelectItem>
                   <SelectItem value="land">Land</SelectItem>
                   <SelectItem value="commercial">Commercial</SelectItem>
                 </SelectContent>
@@ -207,7 +201,12 @@ export const AddLeadDialog = ({ open, onOpenChange }: AddLeadDialogProps) => {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={createLead.isPending}
+            >
+              {createLead.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Lead
             </Button>
           </div>

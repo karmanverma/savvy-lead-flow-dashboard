@@ -10,38 +10,53 @@ import { Analytics } from "@/components/Analytics";
 import { AIAgentsManagement } from "@/components/AIAgentsManagement";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User, ChevronDown } from "lucide-react";
+import { useLeads } from "@/hooks/useLeads";
+import { useCalls } from "@/hooks/useCalls";
+import { useAIAgents } from "@/hooks/useAIAgents";
+import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User, ChevronDown, Loader2 } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("pipeline");
   const [showAddLead, setShowAddLead] = useState(false);
   const { user, signOut } = useAuth();
+  
+  // Fetch real data
+  const { data: leads, isLoading: leadsLoading } = useLeads();
+  const { data: calls, isLoading: callsLoading } = useCalls();
+  const { data: aiAgents } = useAIAgents();
+
+  // Calculate real stats
+  const totalLeads = leads?.length || 0;
+  const totalCalls = calls?.length || 0;
+  const qualifiedLeads = leads?.filter(lead => lead.status === 'qualified' || lead.status === 'appointment').length || 0;
+  const conversionRate = totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0;
+  const activeAIAgents = aiAgents?.filter(agent => agent.is_active).length || 0;
 
   const stats = [
     {
       title: "Total Leads",
-      value: "247",
+      value: leadsLoading ? "..." : totalLeads.toString(),
       change: "+12%",
       icon: Users,
       color: "text-blue-600"
     },
     {
       title: "Calls Made",
-      value: "89",
+      value: callsLoading ? "..." : totalCalls.toString(),
       change: "+23%",
       icon: Phone,
       color: "text-green-600"
     },
     {
       title: "Qualified Leads",
-      value: "156",
+      value: leadsLoading ? "..." : qualifiedLeads.toString(),
       change: "+8%",
       icon: TrendingUp,
       color: "text-purple-600"
     },
     {
       title: "Conversion Rate",
-      value: "63%",
+      value: leadsLoading ? "..." : `${conversionRate}%`,
       change: "+5%",
       icon: TrendingUp,
       color: "text-orange-600"
@@ -100,7 +115,13 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      {stat.value === "..." ? (
+                        <Loader2 className="w-8 h-8 animate-spin" />
+                      ) : (
+                        stat.value
+                      )}
+                    </p>
                     <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
                       {stat.change}
                     </Badge>
@@ -121,7 +142,7 @@ const Index = () => {
             <TabsTrigger value="agents" className="px-6 py-3 flex items-center gap-2">
               <Bot className="w-4 h-4" />
               AI Agents
-              <Badge variant="secondary" className="ml-1">3</Badge>
+              <Badge variant="secondary" className="ml-1">{activeAIAgents}</Badge>
             </TabsTrigger>
           </TabsList>
 

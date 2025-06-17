@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadPipeline } from "@/components/LeadPipeline";
 import { CallHistory } from "@/components/CallHistory";
 import { Analytics } from "@/components/Analytics";
-import { EnhancedAIAgentsManagement } from "@/components/EnhancedAIAgentsManagement";
+import { AIAgentsManagement } from "@/components/AIAgentsManagement";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLeads } from "@/hooks/useLeads";
@@ -158,7 +158,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="agents">
-            <EnhancedAIAgentsManagement />
+            <AIAgentsManagement />
           </TabsContent>
         </Tabs>
       </div>

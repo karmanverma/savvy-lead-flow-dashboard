@@ -23,6 +23,7 @@ import {
   Activity
 } from "lucide-react";
 import type { AIAgent } from "@/hooks/useAIAgents";
+import { useElevenLabsIntegration } from "@/hooks/useElevenLabsIntegration";
 
 interface EnhancedAIAgentCardProps {
   agent: AIAgent;
@@ -30,7 +31,6 @@ interface EnhancedAIAgentCardProps {
   onEdit?: (agent: AIAgent) => void;
   onDuplicate?: (agent: AIAgent) => void;
   onDelete?: (agent: AIAgent) => void;
-  onPlayVoice?: (voiceId: string) => void;
 }
 
 export const EnhancedAIAgentCard = ({
@@ -38,18 +38,18 @@ export const EnhancedAIAgentCard = ({
   onTest,
   onEdit,
   onDuplicate,
-  onDelete,
-  onPlayVoice
+  onDelete
 }: EnhancedAIAgentCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const { testVoice } = useElevenLabsIntegration();
 
   const handleVoicePlay = async () => {
-    if (agent.voice_id && onPlayVoice) {
+    if (agent.voice_id) {
       setIsPlaying(true);
       try {
-        await onPlayVoice(agent.voice_id);
+        await testVoice.mutateAsync(agent.voice_id);
       } finally {
-        setTimeout(() => setIsPlaying(false), 3000); // Reset after 3 seconds
+        setIsPlaying(false);
       }
     }
   };
@@ -62,6 +62,8 @@ export const EnhancedAIAgentCard = ({
     if (!objectives || objectives.length === 0) return 'General';
     return objectives.slice(0, 2).join(', ') + (objectives.length > 2 ? '...' : '');
   };
+
+  const isElevenLabsSynced = Boolean(agent.elevenlabs_agent_id);
 
   return (
     <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
@@ -86,6 +88,12 @@ export const EnhancedAIAgentCard = ({
                   <Badge variant="outline" className="text-xs">
                     <Mic className="w-3 h-3 mr-1" />
                     Voice
+                  </Badge>
+                )}
+                {isElevenLabsSynced && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    <Bot className="w-3 h-3 mr-1" />
+                    EL Synced
                   </Badge>
                 )}
               </div>
@@ -143,6 +151,15 @@ export const EnhancedAIAgentCard = ({
               {(agent as any).language || 'en'}
             </Badge>
           </div>
+
+          {isElevenLabsSynced && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">EL Agent ID:</span>
+              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                {agent.elevenlabs_agent_id?.slice(0, 8)}...
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-2">
@@ -160,10 +177,10 @@ export const EnhancedAIAgentCard = ({
             variant="outline" 
             className="flex-1 text-xs"
             onClick={handleVoicePlay}
-            disabled={!agent.voice_id || isPlaying}
+            disabled={!agent.voice_id || isPlaying || testVoice.isPending}
           >
             <Mic className={`w-3 h-3 mr-1 ${isPlaying ? 'animate-pulse' : ''}`} />
-            {isPlaying ? 'Playing...' : 'Voice'}
+            {isPlaying || testVoice.isPending ? 'Playing...' : 'Voice'}
           </Button>
         </div>
 
@@ -172,7 +189,7 @@ export const EnhancedAIAgentCard = ({
             <span>Created: {new Date(agent.created_at).toLocaleDateString()}</span>
             <div className="flex items-center gap-1">
               <Activity className="w-3 h-3" />
-              <span>Ready</span>
+              <span>{isElevenLabsSynced ? 'Ready' : 'Needs Sync'}</span>
             </div>
           </div>
         </div>

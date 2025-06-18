@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Phone, Calendar, Loader2 } from "lucide-react";
+import { Phone, Calendar, Loader2, Bot } from "lucide-react";
 import { LeadProfile } from "./LeadProfile";
+import { AICallTrigger } from "./AICallTrigger";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 
 const stages = [
@@ -137,6 +138,15 @@ export const LeadPipeline = () => {
                           <Phone className="w-3 h-3 mr-1" />
                           Call
                         </Button>
+                        <AICallTrigger
+                          leadId={lead.id}
+                          leadName={`${lead.first_name} ${lead.last_name}`}
+                          leadPhone={lead.phone}
+                          onCallStarted={() => {
+                            // Refresh the call queue after initiating a call
+                            console.log('AI call started for lead:', lead.id);
+                          }}
+                        />
                         <Button size="sm" variant="outline" className="flex-1">
                           <Calendar className="w-3 h-3 mr-1" />
                           Schedule

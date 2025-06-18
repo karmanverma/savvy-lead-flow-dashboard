@@ -8,12 +8,14 @@ import { LeadPipeline } from "@/components/LeadPipeline";
 import { CallHistory } from "@/components/CallHistory";
 import { Analytics } from "@/components/Analytics";
 import { AIAgentsManagement } from "@/components/AIAgentsManagement";
+import { CallQueueMonitor } from "@/components/CallQueueMonitor";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLeads } from "@/hooks/useLeads";
 import { useCalls } from "@/hooks/useCalls";
 import { useAIAgents } from "@/hooks/useAIAgents";
-import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User, ChevronDown, Loader2 } from "lucide-react";
+import { useCallQueue } from "@/hooks/useCallQueue";
+import { Users, Phone, TrendingUp, Plus, Bot, LogOut, User, ChevronDown, Loader2, Clock } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("pipeline");
@@ -24,6 +26,7 @@ const Index = () => {
   const { data: leads, isLoading: leadsLoading } = useLeads();
   const { data: calls, isLoading: callsLoading } = useCalls();
   const { data: aiAgents } = useAIAgents();
+  const { data: queuedCalls } = useCallQueue();
 
   // Calculate real stats
   const totalLeads = leads?.length || 0;
@@ -31,6 +34,7 @@ const Index = () => {
   const qualifiedLeads = leads?.filter(lead => lead.status === 'qualified' || lead.status === 'appointment').length || 0;
   const conversionRate = totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0;
   const activeAIAgents = aiAgents?.filter(agent => agent.is_active).length || 0;
+  const queuedCallsCount = queuedCalls?.filter(call => call.status === 'scheduled').length || 0;
 
   const stats = [
     {
@@ -137,6 +141,15 @@ const Index = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white p-1 rounded-lg shadow-sm">
             <TabsTrigger value="pipeline" className="px-6 py-3">Lead Pipeline</TabsTrigger>
+            <TabsTrigger value="queue" className="px-6 py-3 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Call Queue
+              {queuedCallsCount > 0 && (
+                <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-800">
+                  {queuedCallsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="calls" className="px-6 py-3">Call History</TabsTrigger>
             <TabsTrigger value="analytics" className="px-6 py-3">Analytics</TabsTrigger>
             <TabsTrigger value="agents" className="px-6 py-3 flex items-center gap-2">
@@ -157,6 +170,10 @@ const Index = () => {
               </Button>
             </div>
             <LeadPipeline />
+          </TabsContent>
+
+          <TabsContent value="queue">
+            <CallQueueMonitor />
           </TabsContent>
 
           <TabsContent value="calls">

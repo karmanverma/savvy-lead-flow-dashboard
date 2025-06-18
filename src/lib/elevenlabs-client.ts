@@ -1,109 +1,148 @@
 
-import { supabase } from '@/integrations/supabase/client';
+const ELEVENLABS_API_KEY = 'sk_3916f6f66157e20925991c16f906e8984d1219f3f0be85ab';
+const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
 
 export interface ElevenLabsAgent {
   agent_id: string;
   name: string;
-  system_prompt: string;
+  voice_id: string;
+  language: string;
+  prompt: {
+    prompt: string;
+  };
   first_message: string;
-  voice: {
-    voice_id: string;
+  created_at: string;
+}
+
+export interface ConversationConfig {
+  agent_id: string;
+  voice_settings?: {
     stability: number;
     similarity_boost: number;
     style: number;
     use_speaker_boost: boolean;
   };
-  llm: {
-    model: string;
-    temperature: number;
-    max_tokens: number;
-  };
-  max_duration_seconds: number;
-  language: string;
-  conversation_config: any;
 }
 
 export interface CallRequest {
   agent_id: string;
   customer_phone_number: string;
-  system_prompt_override?: string;
-  first_message_override?: string;
-  max_duration_seconds?: number;
-  webhook_url?: string;
+  customer_name?: string;
 }
 
-export class ElevenLabsClient {
+export interface CallResponse {
+  call_id: string;
+  status: string;
+  agent_id: string;
+  customer_phone_number: string;
+  created_at: string;
+}
+
+class ElevenLabsClient {
   private apiKey: string;
-  private baseUrl = 'https://api.elevenlabs.io/v1';
+  private baseUrl: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string = ELEVENLABS_API_KEY) {
     this.apiKey = apiKey;
+    this.baseUrl = ELEVENLABS_BASE_URL;
   }
 
-  async createAgent(agentData: Partial<ElevenLabsAgent>): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/agents`, {
-      method: 'POST',
+  private async makeRequest(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'xi-api-key': this.apiKey,
         'Content-Type': 'application/json',
+        ...options.headers,
       },
-      body: JSON.stringify(agentData),
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create agent: ${response.statusText}`);
+      throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`);
     }
 
     return response.json();
   }
 
-  async initiateCall(callData: CallRequest): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/convai/twilio/outbound_call`, {
+  async createAgent(config: {
+    name: string;
+    voice_id: string;
+    prompt: string;
+    first_message: string;
+    language?: string;
+  }): Promise<ElevenLabsAgent> {
+    const response = await this.makeRequest('/convai/agents', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(callData),
+      body: JSON.stringify({
+        name: config.name,
+        voice_id: config.voice_id,
+        prompt: {
+          prompt: config.prompt,
+        },
+        first_message: config.first_message,
+        language: config.language || 'en',
+      }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to initiate call: ${response.statusText}`);
-    }
-
-    return response.json();
+    return response;
   }
 
-  async getAgents(): Promise<any[]> {
-    const response = await fetch(`${this.baseUrl}/agents`, {
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
+  async getAgent(agentId: string): Promise<ElevenLabsAgent> {
+    return this.makeRequest(`/convai/agents/${agentId}`);
+  }
+
+  async updateAgent(agentId: string, updates: Partial<ElevenLabsAgent>): Promise<ElevenLabsAgent> {
+    return this.makeRequest(`/convai/agents/${agentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
     });
+  }
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch agents: ${response.statusText}`);
-    }
+  async deleteAgent(agentId: string): Promise<void> {
+    await this.makeRequest(`/convai/agents/${agentId}`, {
+      method: 'DELETE',
+    });
+  }
 
-    const data = await response.json();
-    return data.agents || [];
+  async initiateCall(callRequest: CallRequest): Promise<CallResponse> {
+    return this.makeRequest('/convai/calls', {
+      method: 'POST',
+      body: JSON.stringify(callRequest),
+    });
+  }
+
+  async getCallStatus(callId: string): Promise<any> {
+    return this.makeRequest(`/convai/calls/${callId}`);
   }
 
   async getVoices(): Promise<any[]> {
-    const response = await fetch(`${this.baseUrl}/voices`, {
+    return this.makeRequest('/voices');
+  }
+
+  async testVoice(voiceId: string, text: string = "Hello, this is a test of my voice."): Promise<ArrayBuffer> {
+    const response = await fetch(`${this.baseUrl}/text-to-speech/${voiceId}`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'xi-api-key': this.apiKey,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.5,
+        },
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch voices: ${response.statusText}`);
+      throw new Error(`Voice test failed: ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.voices || [];
+    return response.arrayBuffer();
   }
 }
 
-// Initialize client with environment variable (to be set in edge function)
-export const elevenLabsClient = new ElevenLabsClient(process.env.ELEVENLABS_API_KEY || '');
+export const elevenLabsClient = new ElevenLabsClient();

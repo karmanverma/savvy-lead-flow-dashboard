@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Phone, Bot, Loader2 } from "lucide-react";
 import { useAIAgents } from "@/hooks/useAIAgents";
 import { useInitiateCall } from "@/hooks/useCallQueue";
-import { useElevenLabsIntegration } from "@/hooks/useElevenLabsIntegration";
+import { useSecureElevenLabsIntegration } from "@/hooks/useSecureElevenLabsIntegration";
 
 interface AICallTriggerProps {
   leadId: string;
@@ -35,7 +35,7 @@ export const AICallTrigger = ({ leadId, leadName, leadPhone, onCallStarted }: AI
   
   const { data: aiAgents, isLoading: agentsLoading } = useAIAgents();
   const initiateCall = useInitiateCall();
-  const { initiateElevenLabsCall } = useElevenLabsIntegration();
+  const { initiateSecureCall } = useSecureElevenLabsIntegration();
 
   const handleInitiateCall = async () => {
     if (!selectedAgent || !selectedObjective) return;
@@ -48,14 +48,15 @@ export const AICallTrigger = ({ leadId, leadName, leadPhone, onCallStarted }: AI
         lead_id: leadId,
         ai_agent_id: selectedAgent,
         call_objective: objective,
-        priority: 1 // Immediate call
+        priority: 1
       });
 
-      // Then initiate the actual ElevenLabs call
-      await initiateElevenLabsCall.mutateAsync({
-        agentId: selectedAgent,
-        phoneNumber: leadPhone,
-        customerName: leadName,
+      // Then initiate the actual ElevenLabs call using secure backend
+      await initiateSecureCall.mutateAsync({
+        lead_id: leadId,
+        ai_agent_id: selectedAgent,
+        call_objective: objective,
+        priority: 1
       });
       
       setShowObjectiveModal(false);
@@ -72,11 +73,11 @@ export const AICallTrigger = ({ leadId, leadName, leadPhone, onCallStarted }: AI
     <>
       <Button
         onClick={() => setShowObjectiveModal(true)}
-        disabled={initiateCall.isPending || initiateElevenLabsCall.isPending}
+        disabled={initiateCall.isPending || initiateSecureCall.isPending}
         className="bg-green-600 hover:bg-green-700 text-white"
         size="sm"
       >
-        {(initiateCall.isPending || initiateElevenLabsCall.isPending) ? (
+        {(initiateCall.isPending || initiateSecureCall.isPending) ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
         ) : (
           <Bot className="w-4 h-4 mr-2" />
@@ -177,12 +178,12 @@ export const AICallTrigger = ({ leadId, leadName, leadPhone, onCallStarted }: AI
                 !selectedObjective || 
                 (selectedObjective === 'Custom' && !customObjective.trim()) || 
                 initiateCall.isPending ||
-                initiateElevenLabsCall.isPending ||
+                initiateSecureCall.isPending ||
                 syncedAgents.length === 0
               }
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {(initiateCall.isPending || initiateElevenLabsCall.isPending) ? (
+              {(initiateCall.isPending || initiateSecureCall.isPending) ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Phone className="w-4 h-4 mr-2" />

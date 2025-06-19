@@ -23,7 +23,7 @@ import {
   Activity
 } from "lucide-react";
 import type { AIAgent } from "@/hooks/useAIAgents";
-import { useElevenLabsIntegration } from "@/hooks/useElevenLabsIntegration";
+import { useSecureElevenLabsIntegration } from "@/hooks/useSecureElevenLabsIntegration";
 
 interface EnhancedAIAgentCardProps {
   agent: AIAgent;
@@ -41,7 +41,7 @@ export const EnhancedAIAgentCard = ({
   onDelete
 }: EnhancedAIAgentCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const { testVoice } = useElevenLabsIntegration();
+  const { testVoice } = useSecureElevenLabsIntegration();
 
   const handleVoicePlay = async () => {
     if (agent.voice_id) {

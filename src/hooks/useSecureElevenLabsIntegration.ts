@@ -78,7 +78,10 @@ export const useSecureElevenLabsIntegration = () => {
   const getVoices = useQuery({
     queryKey: ['elevenlabs-voices'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-voices');
+      // Use GET request with no body for the voices endpoint
+      const { data, error } = await supabase.functions.invoke('elevenlabs-voices', {
+        method: 'GET'
+      });
       if (error) throw error;
       return data;
     },

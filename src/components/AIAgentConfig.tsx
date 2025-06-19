@@ -9,37 +9,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useSecureElevenLabsIntegration } from '@/hooks/useSecureElevenLabsIntegration';
-import { Loader2, Bot } from 'lucide-react';
+import { Loader2, Bot, Play } from 'lucide-react';
+import type { AIAgent } from '@/hooks/useAIAgents';
 
 interface AIAgentConfigProps {
+  initialData?: AIAgent;
   onAgentCreated?: (agent: any) => void;
   onClose?: () => void;
+  isEditing?: boolean;
 }
 
-export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
+export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing = false }: AIAgentConfigProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { getVoices, createElevenLabsAgent } = useSecureElevenLabsIntegration();
+  const { getVoices, createElevenLabsAgent, testVoice } = useSecureElevenLabsIntegration();
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    system_prompt: 'You are a professional real estate lead qualification specialist. Your role is to qualify leads, gather their property preferences, and schedule appointments with human agents. Be friendly, professional, and helpful. Always ask permission before proceeding with questions and respect if they want to call back later.',
-    first_message_script: 'Hi, this is calling from Toronto Digital Real Estate. I hope I\'m catching you at a good time. I wanted to follow up on your interest in properties and see how we can help you find your ideal home. Do you have a few minutes to chat?',
-    voice_id: '',
-    voice_settings: {
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    system_prompt: initialData?.system_prompt || 'You are a professional real estate lead qualification specialist. Your role is to qualify leads, gather their property preferences, and schedule appointments with human agents. Be friendly, professional, and helpful. Always ask permission before proceeding with questions and respect if they want to call back later.',
+    first_message_script: initialData?.first_message_script || 'Hi, this is calling from Toronto Digital Real Estate. I hope I\'m catching you at a good time. I wanted to follow up on your interest in properties and see how we can help you find your ideal home. Do you have a few minutes to chat?',
+    voice_id: initialData?.voice_id || '',
+    voice_settings: initialData?.voice_settings || {
       stability: 0.8,
       similarity_boost: 0.6,
       style: 0.2,
       use_speaker_boost: true
     },
-    llm_config: {
+    llm_config: initialData?.llm_config || {
       model: 'gpt-4',
       temperature: 0.7,
       max_tokens: 1000
     },
-    max_call_duration: 300,
-    language: 'en',
-    call_objectives: ['Lead Qualification', 'Property Preferences', 'Appointment Scheduling']
+    max_call_duration: initialData?.max_call_duration || 300,
+    language: initialData?.language || 'en',
+    call_objectives: initialData?.call_objectives || ['Lead Qualification', 'Property Preferences', 'Appointment Scheduling']
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +87,16 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
     }));
   };
 
+  const handleTestVoice = async () => {
+    if (formData.voice_id) {
+      try {
+        await testVoice.mutateAsync(formData.voice_id);
+      } catch (error) {
+        console.error('Voice test failed:', error);
+      }
+    }
+  };
+
   const voices = getVoices.data?.voices || [];
 
   return (
@@ -91,7 +104,7 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="w-5 h-5" />
-          Create AI Agent
+          {isEditing ? 'Edit AI Agent' : 'Create AI Agent'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -110,18 +123,33 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
             </div>
             <div>
               <Label htmlFor="voice">Voice</Label>
-              <Select value={formData.voice_id} onValueChange={(value) => updateFormData('voice_id', value)} required>
-                <SelectTrigger>
-                  <SelectValue placeholder={getVoices.isLoading ? "Loading voices..." : "Select Voice"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {voices.map((voice: any) => (
-                    <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                      {voice.name} ({voice.category})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={formData.voice_id} onValueChange={(value) => updateFormData('voice_id', value)} required>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={getVoices.isLoading ? "Loading voices..." : "Select Voice"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {voices.map((voice: any) => (
+                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
+                        {voice.name} ({voice.category})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleTestVoice}
+                  disabled={!formData.voice_id || testVoice.isPending}
+                >
+                  {testVoice.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -289,10 +317,10 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
               {(isLoading || createElevenLabsAgent.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating Agent...
+                  {isEditing ? 'Updating Agent...' : 'Creating Agent...'}
                 </>
               ) : (
-                'Create AI Agent'
+                isEditing ? 'Update AI Agent' : 'Create AI Agent'
               )}
             </Button>
           </div>

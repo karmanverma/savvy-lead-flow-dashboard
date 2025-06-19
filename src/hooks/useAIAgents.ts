@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AIAgent {
@@ -24,17 +24,27 @@ export interface AIAgent {
 }
 
 export const useAIAgents = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
     queryKey: ['ai-agents'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_agents')
         .select('*')
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as AIAgent[];
     },
   });
+
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ['ai-agents'] });
+  };
+
+  return {
+    ...query,
+    refetch
+  };
 };

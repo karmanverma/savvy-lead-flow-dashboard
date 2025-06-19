@@ -54,6 +54,41 @@ export type Database = {
           },
         ]
       }
+      agent_dynamic_variables: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          variable_name: string
+          variable_value: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          variable_name: string
+          variable_value: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          variable_name?: string
+          variable_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_dynamic_variables_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agent_performance: {
         Row: {
           ai_agent_id: string
@@ -256,6 +291,8 @@ export type Database = {
           conversation_data: Json | null
           created_at: string
           duration_seconds: number | null
+          elevenlabs_call_id: string | null
+          elevenlabs_conversation_id: string | null
           id: string
           lead_id: string
           lead_score_change: number | null
@@ -272,6 +309,8 @@ export type Database = {
           conversation_data?: Json | null
           created_at?: string
           duration_seconds?: number | null
+          elevenlabs_call_id?: string | null
+          elevenlabs_conversation_id?: string | null
           id?: string
           lead_id: string
           lead_score_change?: number | null
@@ -288,6 +327,8 @@ export type Database = {
           conversation_data?: Json | null
           created_at?: string
           duration_seconds?: number | null
+          elevenlabs_call_id?: string | null
+          elevenlabs_conversation_id?: string | null
           id?: string
           lead_id?: string
           lead_score_change?: number | null

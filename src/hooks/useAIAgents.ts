@@ -15,6 +15,12 @@ export interface AIAgent {
   max_call_duration?: number;
   created_at: string;
   updated_at: string;
+  elevenlabs_agent_id?: string;
+  language?: string;
+  phone_number?: string;
+  conversation_config?: any;
+  llm_config?: any;
+  webhook_url?: string;
 }
 
 export const useAIAgents = () => {

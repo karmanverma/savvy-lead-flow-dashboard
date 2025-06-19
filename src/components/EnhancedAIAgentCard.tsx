@@ -148,7 +148,7 @@ export const EnhancedAIAgentCard = ({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Language:</span>
             <Badge variant="outline" className="text-xs">
-              {(agent as any).language || 'en'}
+              {agent.language || 'en'}
             </Badge>
           </div>
 

@@ -46,12 +46,11 @@ export function AIAgentTester({ agent }: AIAgentTesterProps) {
   const initiateTestCall = async () => {
     setIsLoading(true);
     try {
-      // This would require a test phone number - for demo purposes
       const testPhoneNumber = prompt('Enter test phone number (e.g., +1234567890):');
       if (!testPhoneNumber) return;
 
       await initiateSecureCall.mutateAsync({
-        lead_id: 'test-lead-id', // This would need to be a real lead ID
+        lead_id: 'test-lead-id',
         ai_agent_id: agent.id,
         call_objective: 'Agent testing and validation',
         priority: 1

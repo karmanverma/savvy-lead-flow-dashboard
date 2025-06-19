@@ -87,8 +87,6 @@ export const useSecureElevenLabsIntegration = () => {
 
   const testVoice = useMutation({
     mutationFn: async (voiceId: string) => {
-      // For testing, we'll use the existing client-side approach
-      // In production, this could also be moved to an edge function
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
         headers: {

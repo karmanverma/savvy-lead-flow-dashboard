@@ -8,15 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useSecureElevenLabsIntegration } from '@/hooks/useSecureElevenLabsIntegration';
 import { Loader2, Bot } from 'lucide-react';
-
-interface Voice {
-  voice_id: string;
-  name: string;
-  category: string;
-}
 
 interface AIAgentConfigProps {
   onAgentCreated?: (agent: any) => void;
@@ -24,10 +17,8 @@ interface AIAgentConfigProps {
 }
 
 export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
-  const [voices, setVoices] = useState<Voice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingVoices, setIsLoadingVoices] = useState(true);
-  const { toast } = useToast();
+  const { getVoices, createElevenLabsAgent } = useSecureElevenLabsIntegration();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -51,54 +42,16 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
     call_objectives: ['Lead Qualification', 'Property Preferences', 'Appointment Scheduling']
   });
 
-  useEffect(() => {
-    fetchVoices();
-  }, []);
-
-  const fetchVoices = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-voices');
-      
-      if (error) throw error;
-      
-      setVoices(data.voices || []);
-    } catch (error) {
-      console.error('Failed to fetch voices:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch available voices',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingVoices(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-agent-create', {
-        body: formData
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'AI Agent created and synced with ElevenLabs',
-      });
-
-      onAgentCreated?.(data.agent);
+      const result = await createElevenLabsAgent.mutateAsync(formData);
+      onAgentCreated?.(result.agent);
       onClose?.();
     } catch (error: any) {
       console.error('Agent creation failed:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create AI agent',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +84,8 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
     }));
   };
 
+  const voices = getVoices.data?.voices || [];
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -157,10 +112,10 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
               <Label htmlFor="voice">Voice</Label>
               <Select value={formData.voice_id} onValueChange={(value) => updateFormData('voice_id', value)} required>
                 <SelectTrigger>
-                  <SelectValue placeholder={isLoadingVoices ? "Loading voices..." : "Select Voice"} />
+                  <SelectValue placeholder={getVoices.isLoading ? "Loading voices..." : "Select Voice"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {voices.map((voice) => (
+                  {voices.map((voice: any) => (
                     <SelectItem key={voice.voice_id} value={voice.voice_id}>
                       {voice.name} ({voice.category})
                     </SelectItem>
@@ -330,8 +285,8 @@ export function AIAgentConfig({ onAgentCreated, onClose }: AIAgentConfigProps) {
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? (
+            <Button type="submit" disabled={isLoading || createElevenLabsAgent.isPending} className="flex-1">
+              {(isLoading || createElevenLabsAgent.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Creating Agent...

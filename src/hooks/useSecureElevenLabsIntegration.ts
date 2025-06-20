@@ -13,9 +13,7 @@ export const useSecureElevenLabsIntegration = () => {
       description?: string;
       system_prompt: string;
       first_message_script: string;
-      voice_id: string;
-      voice_settings?: any;
-      llm_config?: any;
+      voice_id?: string;
       max_call_duration?: number;
       language?: string;
       call_objectives?: string[];
@@ -95,7 +93,6 @@ export const useSecureElevenLabsIntegration = () => {
       console.log('Fetching ElevenLabs voices...');
       
       try {
-        // Use the edge function to get voices securely
         const { data, error } = await supabase.functions.invoke('elevenlabs-voices', {
           method: 'GET'
         });
@@ -122,7 +119,6 @@ export const useSecureElevenLabsIntegration = () => {
       console.log('Testing voice with ID:', voiceId);
       
       try {
-        // Use the edge function to test voice securely
         const { data, error } = await supabase.functions.invoke('elevenlabs-voices', {
           method: 'POST',
           body: { 
@@ -138,19 +134,27 @@ export const useSecureElevenLabsIntegration = () => {
         }
 
         // If we get audio data back, play it
-        if (data && data.audio_url) {
-          const audio = new Audio(data.audio_url);
+        if (data && data.audio_data) {
+          const audioBlob = new Blob([
+            new Uint8Array(atob(data.audio_data).split('').map(c => c.charCodeAt(0)))
+          ], { type: data.content_type || 'audio/mpeg' });
+          
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
           
           return new Promise<void>((resolve, reject) => {
             audio.onended = () => {
+              URL.revokeObjectURL(audioUrl);
               console.log('Voice test completed successfully');
               resolve();
             };
             audio.onerror = (e) => {
+              URL.revokeObjectURL(audioUrl);
               console.error('Audio playback error:', e);
               reject(new Error('Failed to play audio'));
             };
             audio.play().catch((e) => {
+              URL.revokeObjectURL(audioUrl);
               console.error('Audio play error:', e);
               reject(e);
             });

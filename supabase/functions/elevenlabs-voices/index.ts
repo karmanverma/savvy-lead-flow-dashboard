@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Using local API key for development
+const ELEVENLABS_API_KEY = 'sk_3916f6f66157e20925991c16f906e8984d1219f3f0be85ab';
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -13,24 +16,6 @@ serve(async (req) => {
 
   try {
     console.log('Voices request received, method:', req.method)
-    
-    // Get ElevenLabs API key from environment
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
-    if (!elevenLabsApiKey) {
-      console.error('ElevenLabs API key not found in environment')
-      return new Response(
-        JSON.stringify({ 
-          error: 'ElevenLabs API key not configured',
-          details: 'Please configure ELEVENLABS_API_KEY in your Supabase secrets'
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    console.log('Using API key (first 10 chars):', elevenLabsApiKey.substring(0, 10))
 
     if (req.method === 'GET') {
       // Fetch voices from ElevenLabs API
@@ -39,7 +24,7 @@ serve(async (req) => {
       const response = await fetch('https://api.elevenlabs.io/v1/voices', {
         method: 'GET',
         headers: {
-          'xi-api-key': elevenLabsApiKey,
+          'xi-api-key': ELEVENLABS_API_KEY,
           'Content-Type': 'application/json',
         },
       })
@@ -83,7 +68,7 @@ serve(async (req) => {
         const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${body.voice_id}`, {
           method: 'POST',
           headers: {
-            'xi-api-key': elevenLabsApiKey,
+            'xi-api-key': ELEVENLABS_API_KEY,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

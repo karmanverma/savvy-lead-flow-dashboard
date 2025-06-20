@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
 import { useSecureElevenLabsIntegration } from '@/hooks/useSecureElevenLabsIntegration';
 import { Loader2, Bot, Play, Volume2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -30,17 +28,6 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
     system_prompt: initialData?.system_prompt || 'You are a professional real estate lead qualification specialist. Your role is to qualify leads, gather their property preferences, and schedule appointments with human agents. Be friendly, professional, and helpful. Always ask permission before proceeding with questions and respect if they want to call back later.',
     first_message_script: initialData?.first_message_script || 'Hi, this is calling from Toronto Digital Real Estate. I hope I\'m catching you at a good time. I wanted to follow up on your interest in properties and see how we can help you find your ideal home. Do you have a few minutes to chat?',
     voice_id: initialData?.voice_id || '',
-    voice_settings: initialData?.voice_settings || {
-      stability: 0.8,
-      similarity_boost: 0.6,
-      style: 0.2,
-      use_speaker_boost: true
-    },
-    llm_config: initialData?.llm_config || {
-      model: 'gpt-4',
-      temperature: 0.7,
-      max_tokens: 1000
-    },
     max_call_duration: initialData?.max_call_duration || 300,
     language: initialData?.language || 'en',
     call_objectives: initialData?.call_objectives || ['Lead Qualification', 'Property Preferences', 'Appointment Scheduling']
@@ -70,26 +57,6 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
     }));
   };
 
-  const updateVoiceSettings = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      voice_settings: {
-        ...prev.voice_settings,
-        [field]: value
-      }
-    }));
-  };
-
-  const updateLLMConfig = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      llm_config: {
-        ...prev.llm_config,
-        [field]: value
-      }
-    }));
-  };
-
   const handleTestVoice = async () => {
     if (formData.voice_id) {
       try {
@@ -110,7 +77,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
   console.log('Voices data:', voices);
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="w-5 h-5" />
@@ -157,9 +124,8 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
               <div className="flex gap-2">
                 <Select 
                   value={formData.voice_id} 
-                  onValueChange={(value) => updateFormData('voice_id', value)} 
-                  required
-                  disabled={voicesLoading || voicesError}
+                  onValueChange={(value) => updateFormData('voice_id', value)}
+                  disabled={voicesLoading || !!voicesError}
                 >
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder={
@@ -208,57 +174,6 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
             />
           </div>
 
-          {/* Voice Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Voice Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <Label>Stability: {formData.voice_settings.stability}</Label>
-                <Slider
-                  value={[formData.voice_settings.stability]}
-                  onValueChange={(value) => updateVoiceSettings('stability', value[0])}
-                  max={1}
-                  min={0}
-                  step={0.1}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Higher values make voice more consistent</p>
-              </div>
-              <div>
-                <Label>Similarity Boost: {formData.voice_settings.similarity_boost}</Label>
-                <Slider
-                  value={[formData.voice_settings.similarity_boost]}
-                  onValueChange={(value) => updateVoiceSettings('similarity_boost', value[0])}
-                  max={1}
-                  min={0}
-                  step={0.1}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Higher values make voice more similar to original</p>
-              </div>
-              <div>
-                <Label>Style: {formData.voice_settings.style}</Label>
-                <Slider
-                  value={[formData.voice_settings.style]}
-                  onValueChange={(value) => updateVoiceSettings('style', value[0])}
-                  max={1}
-                  min={0}
-                  step={0.1}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Higher values add more expressiveness</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.voice_settings.use_speaker_boost}
-                onCheckedChange={(checked) => updateVoiceSettings('use_speaker_boost', checked)}
-              />
-              <Label>Use Speaker Boost</Label>
-              <p className="text-xs text-gray-500">Enhances voice clarity</p>
-            </div>
-          </div>
-
           {/* Scripts */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Agent Scripts</h3>
@@ -283,48 +198,6 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                 placeholder="Hi, this is [Agent Name] calling from..."
                 required
               />
-            </div>
-          </div>
-
-          {/* LLM Configuration */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">LLM Configuration</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="model">Model</Label>
-                <Select value={formData.llm_config.model} onValueChange={(value) => updateLLMConfig('model', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Temperature: {formData.llm_config.temperature}</Label>
-                <Slider
-                  value={[formData.llm_config.temperature]}
-                  onValueChange={(value) => updateLLMConfig('temperature', value[0])}
-                  max={2}
-                  min={0}
-                  step={0.1}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Higher values make responses more creative</p>
-              </div>
-              <div>
-                <Label htmlFor="max_tokens">Max Tokens</Label>
-                <Input
-                  id="max_tokens"
-                  type="number"
-                  value={formData.llm_config.max_tokens}
-                  onChange={(e) => updateLLMConfig('max_tokens', parseInt(e.target.value))}
-                  min={100}
-                  max={4000}
-                />
-              </div>
             </div>
           </div>
 
@@ -365,7 +238,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
             )}
             <Button 
               type="submit" 
-              disabled={isLoading || createElevenLabsAgent.isPending || !formData.voice_id} 
+              disabled={isLoading || createElevenLabsAgent.isPending} 
               className="flex-1"
             >
               {(isLoading || createElevenLabsAgent.isPending) ? (

@@ -7,23 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Using local API key for development
+const ELEVENLABS_API_KEY = 'sk_3916f6f66157e20925991c16f906e8984d1219f3f0be85ab';
+
 interface CreateAgentRequest {
   name: string;
   description?: string;
   system_prompt: string;
   first_message_script: string;
-  voice_id: string;
-  voice_settings?: {
-    stability: number;
-    similarity_boost: number;
-    style: number;
-    use_speaker_boost: boolean;
-  };
-  llm_config?: {
-    model: string;
-    temperature: number;
-    max_tokens: number;
-  };
+  voice_id?: string;
   max_call_duration?: number;
   language?: string;
   call_objectives?: string[];
@@ -58,32 +50,28 @@ serve(async (req) => {
     const agentData: CreateAgentRequest = await req.json()
     console.log('Creating agent with data:', agentData)
 
-    // Get ElevenLabs API key from environment
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
-    if (!elevenLabsApiKey) {
-      console.error('ElevenLabs API key not found in environment')
-      throw new Error('ElevenLabs API key not configured')
-    }
-
-    console.log('Using ElevenLabs API key (first 10 chars):', elevenLabsApiKey.substring(0, 10))
-
-    // Create agent in ElevenLabs first
+    // Create agent in ElevenLabs using the correct API structure
     const elevenLabsPayload = {
-      name: agentData.name,
-      prompt: {
-        prompt: agentData.system_prompt,
+      conversation_config: {
+        conversation: {},
+        agent: {
+          first_message: agentData.first_message_script,
+          prompt: {
+            prompt: agentData.system_prompt,
+          }
+        }
       },
-      first_message: agentData.first_message_script,
-      voice_id: agentData.voice_id,
-      language: agentData.language || 'en',
+      name: agentData.name,
+      tags: [user.id] // Using user ID as tag
     }
     
     console.log('Creating ElevenLabs agent with payload:', elevenLabsPayload)
 
-    const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/convai/agents', {
+    const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/convai/agents/create', {
       method: 'POST',
       headers: {
-        'xi-api-key': elevenLabsApiKey,
+        'Xi-Api-Key': ELEVENLABS_API_KEY,
+        'Api-Key': 'xi-api-key',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(elevenLabsPayload),
@@ -105,17 +93,6 @@ serve(async (req) => {
       system_prompt: agentData.system_prompt,
       first_message_script: agentData.first_message_script,
       voice_id: agentData.voice_id,
-      voice_settings: agentData.voice_settings || {
-        stability: 0.8,
-        similarity_boost: 0.6,
-        style: 0.2,
-        use_speaker_boost: true
-      },
-      llm_config: agentData.llm_config || {
-        model: 'gpt-4',
-        temperature: 0.7,
-        max_tokens: 1000
-      },
       max_call_duration: agentData.max_call_duration || 300,
       language: agentData.language || 'en',
       call_objectives: agentData.call_objectives || ['Lead Qualification', 'Property Preferences', 'Appointment Scheduling'],
@@ -139,7 +116,7 @@ serve(async (req) => {
         await fetch(`https://api.elevenlabs.io/v1/convai/agents/${elevenLabsAgent.agent_id}`, {
           method: 'DELETE',
           headers: {
-            'xi-api-key': elevenLabsApiKey,
+            'Xi-Api-Key': ELEVENLABS_API_KEY,
           },
         })
         console.log('Cleaned up ElevenLabs agent after database error')

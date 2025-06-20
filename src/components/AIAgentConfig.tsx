@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useSecureElevenLabsIntegration } from '@/hooks/useSecureElevenLabsIntegration';
-import { Loader2, Bot, Play } from 'lucide-react';
+import { Loader2, Bot, Play, Volume2 } from 'lucide-react';
 import type { AIAgent } from '@/hooks/useAIAgents';
 
 interface AIAgentConfigProps {
@@ -50,7 +50,9 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
     setIsLoading(true);
 
     try {
+      console.log('Submitting agent creation form with data:', formData);
       const result = await createElevenLabsAgent.mutateAsync(formData);
+      console.log('Agent creation result:', result);
       onAgentCreated?.(result.agent);
       onClose?.();
     } catch (error: any) {
@@ -90,6 +92,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
   const handleTestVoice = async () => {
     if (formData.voice_id) {
       try {
+        console.log('Testing voice:', formData.voice_id);
         await testVoice.mutateAsync(formData.voice_id);
       } catch (error) {
         console.error('Voice test failed:', error);
@@ -98,6 +101,10 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
   };
 
   const voices = getVoices.data?.voices || [];
+
+  console.log('Voices loading state:', getVoices.isLoading);
+  console.log('Voices error:', getVoices.error);
+  console.log('Voices data:', voices);
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -122,16 +129,28 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
               />
             </div>
             <div>
-              <Label htmlFor="voice">Voice</Label>
+              <Label htmlFor="voice">Voice Selection</Label>
               <div className="flex gap-2">
-                <Select value={formData.voice_id} onValueChange={(value) => updateFormData('voice_id', value)} required>
+                <Select 
+                  value={formData.voice_id} 
+                  onValueChange={(value) => updateFormData('voice_id', value)} 
+                  required
+                >
                   <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={getVoices.isLoading ? "Loading voices..." : "Select Voice"} />
+                    <SelectValue placeholder={
+                      getVoices.isLoading ? "Loading voices..." : 
+                      getVoices.error ? "Error loading voices" :
+                      voices.length === 0 ? "No voices available" :
+                      "Select Voice"
+                    } />
                   </SelectTrigger>
                   <SelectContent>
                     {voices.map((voice: any) => (
                       <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        {voice.name} ({voice.category})
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="w-3 h-3" />
+                          {voice.name} ({voice.category || 'General'})
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -142,6 +161,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   size="sm"
                   onClick={handleTestVoice}
                   disabled={!formData.voice_id || testVoice.isPending}
+                  title="Test selected voice"
                 >
                   {testVoice.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -150,6 +170,11 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   )}
                 </Button>
               </div>
+              {getVoices.error && (
+                <p className="text-sm text-red-600 mt-1">
+                  Failed to load voices. Check your ElevenLabs API configuration.
+                </p>
+              )}
             </div>
           </div>
 
@@ -177,6 +202,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   step={0.1}
                   className="mt-2"
                 />
+                <p className="text-xs text-gray-500 mt-1">Higher values make voice more consistent</p>
               </div>
               <div>
                 <Label>Similarity Boost: {formData.voice_settings.similarity_boost}</Label>
@@ -188,6 +214,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   step={0.1}
                   className="mt-2"
                 />
+                <p className="text-xs text-gray-500 mt-1">Higher values make voice more similar to original</p>
               </div>
               <div>
                 <Label>Style: {formData.voice_settings.style}</Label>
@@ -199,6 +226,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   step={0.1}
                   className="mt-2"
                 />
+                <p className="text-xs text-gray-500 mt-1">Higher values add more expressiveness</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -207,6 +235,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                 onCheckedChange={(checked) => updateVoiceSettings('use_speaker_boost', checked)}
               />
               <Label>Use Speaker Boost</Label>
+              <p className="text-xs text-gray-500">Enhances voice clarity</p>
             </div>
           </div>
 
@@ -263,6 +292,7 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   step={0.1}
                   className="mt-2"
                 />
+                <p className="text-xs text-gray-500 mt-1">Higher values make responses more creative</p>
               </div>
               <div>
                 <Label htmlFor="max_tokens">Max Tokens</Label>
@@ -313,7 +343,11 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={isLoading || createElevenLabsAgent.isPending} className="flex-1">
+            <Button 
+              type="submit" 
+              disabled={isLoading || createElevenLabsAgent.isPending || !formData.voice_id} 
+              className="flex-1"
+            >
               {(isLoading || createElevenLabsAgent.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

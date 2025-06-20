@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useSecureElevenLabsIntegration } from '@/hooks/useSecureElevenLabsIntegration';
-import { Loader2, Bot, Play, Volume2 } from 'lucide-react';
+import { Loader2, Bot, Play, Volume2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { AIAgent } from '@/hooks/useAIAgents';
 
 interface AIAgentConfigProps {
@@ -101,9 +102,11 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
   };
 
   const voices = getVoices.data?.voices || [];
+  const voicesError = getVoices.error;
+  const voicesLoading = getVoices.isLoading;
 
-  console.log('Voices loading state:', getVoices.isLoading);
-  console.log('Voices error:', getVoices.error);
+  console.log('Voices loading state:', voicesLoading);
+  console.log('Voices error:', voicesError);
   console.log('Voices data:', voices);
 
   return (
@@ -116,6 +119,27 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Voice Loading Error Alert */}
+          {voicesError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load voices from ElevenLabs. Please check your API configuration.
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 ml-2"
+                  onClick={() => getVoices.refetch()}
+                  disabled={voicesLoading}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-1 ${voicesLoading ? 'animate-spin' : ''}`} />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -135,11 +159,12 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   value={formData.voice_id} 
                   onValueChange={(value) => updateFormData('voice_id', value)} 
                   required
+                  disabled={voicesLoading || voicesError}
                 >
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder={
-                      getVoices.isLoading ? "Loading voices..." : 
-                      getVoices.error ? "Error loading voices" :
+                      voicesLoading ? "Loading voices..." : 
+                      voicesError ? "Error loading voices" :
                       voices.length === 0 ? "No voices available" :
                       "Select Voice"
                     } />
@@ -170,11 +195,6 @@ export function AIAgentConfig({ initialData, onAgentCreated, onClose, isEditing 
                   )}
                 </Button>
               </div>
-              {getVoices.error && (
-                <p className="text-sm text-red-600 mt-1">
-                  Failed to load voices. Check your ElevenLabs API configuration.
-                </p>
-              )}
             </div>
           </div>
 

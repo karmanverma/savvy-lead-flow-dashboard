@@ -215,6 +215,45 @@ export type Database = {
           },
         ]
       }
+      business_configuration: {
+        Row: {
+          business_hours: Json | null
+          business_name: string
+          call_objectives: Json | null
+          created_at: string
+          custom_fields: Json | null
+          id: string
+          industry: string
+          is_default: boolean | null
+          terminology: Json | null
+          updated_at: string
+        }
+        Insert: {
+          business_hours?: Json | null
+          business_name: string
+          call_objectives?: Json | null
+          created_at?: string
+          custom_fields?: Json | null
+          id?: string
+          industry: string
+          is_default?: boolean | null
+          terminology?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          business_hours?: Json | null
+          business_name?: string
+          call_objectives?: Json | null
+          created_at?: string
+          custom_fields?: Json | null
+          id?: string
+          industry?: string
+          is_default?: boolean | null
+          terminology?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       call_queue: {
         Row: {
           ai_agent_id: string
@@ -445,6 +484,77 @@ export type Database = {
           },
         ]
       }
+      campaigns: {
+        Row: {
+          business_config: Json | null
+          created_at: string
+          default_agent_id: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          lead_source: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          business_config?: Json | null
+          created_at?: string
+          default_agent_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          lead_source: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          business_config?: Json | null
+          created_at?: string
+          default_agent_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          lead_source?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_default_agent_id_fkey"
+            columns: ["default_agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      global_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_logs: {
         Row: {
           created_at: string
@@ -607,39 +717,48 @@ export type Database = {
       leads: {
         Row: {
           assigned_agent_id: string | null
+          campaign_id: string | null
           created_at: string
+          custom_data: Json | null
           email: string | null
           first_name: string
           id: string
           last_name: string
           lead_score: number
           lead_source: Database["public"]["Enums"]["lead_source"]
+          override_agent_id: string | null
           phone: string
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
         }
         Insert: {
           assigned_agent_id?: string | null
+          campaign_id?: string | null
           created_at?: string
+          custom_data?: Json | null
           email?: string | null
           first_name: string
           id?: string
           last_name: string
           lead_score?: number
           lead_source: Database["public"]["Enums"]["lead_source"]
+          override_agent_id?: string | null
           phone: string
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
         Update: {
           assigned_agent_id?: string | null
+          campaign_id?: string | null
           created_at?: string
+          custom_data?: Json | null
           email?: string | null
           first_name?: string
           id?: string
           last_name?: string
           lead_score?: number
           lead_source?: Database["public"]["Enums"]["lead_source"]
+          override_agent_id?: string | null
           phone?: string
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -650,6 +769,20 @@ export type Database = {
             columns: ["assigned_agent_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_override_agent_id_fkey"
+            columns: ["override_agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
             referencedColumns: ["id"]
           },
         ]
